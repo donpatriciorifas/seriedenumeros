@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rifa - Selección de Números</title>
+    <style>
+        /* Estilos CSS */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+        }
+
+        #number-section {
+            margin-top: 20px;
+        }
+
+        #number-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 10px;
+            max-width: 700px;
+            margin: auto;
+        }
+
+        .number {
+            width: 50px;
+            height: 50px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .number.selected, .number.reserved {
+            background-color: #FF4B4B; /* Rojo para apartados */
+            color: white;
+            cursor: not-allowed;
+        }
+
+        #reserve-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Rifa - Selección de Números</h1>
+        <p>Selecciona los números que deseas apartar y envíalos por WhatsApp.</p>
+    </header>
+
+    <section id="number-section">
+        <div id="number-grid">
+            <!-- Aquí se generarán los números -->
+        </div>
+        <button id="reserve-button" disabled>Apartar Números</button>
+    </section>
+
+    <script>
+        // JavaScript para manejar la selección de números y el envío a WhatsApp
+        document.addEventListener("DOMContentLoaded", () => {
+            const numberGrid = document.getElementById("number-grid");
+            const reserveButton = document.getElementById("reserve-button");
+            const selectedNumbers = new Set();
+            const reservedNumbers = new Set(JSON.parse(localStorage.getItem("reservedNumbers")) || []); // Recuperar reservados del Local Storage
+
+            // Generar números del 001 al 500
+            for (let i = 1; i <= 500; i++) {
+                const number = document.createElement("div");
+                number.className = "number";
+                number.textContent = i.toString().padStart(3, '0'); // Formato 001, 002, etc.
+
+                // Marcar como reservado si el número está en Local Storage
+                if (reservedNumbers.has(i)) {
+                    number.classList.add("reserved");
+                } else {
+                    number.addEventListener("click", () => selectNumber(number, i));
+                }
+
+                numberGrid.appendChild(number);
+            }
+
+            function selectNumber(number, num) {
+                if (reservedNumbers.has(num)) return; // Si está reservado, no hacer nada
+
+                // Marcar el número como seleccionado y agregarlo a la lista de reservados
+                selectedNumbers.add(num);
+                number.classList.add("reserved");
+                reservedNumbers.add(num);
+
+                // Guardar los números reservados en Local Storage
+                localStorage.setItem("reservedNumbers", JSON.stringify(Array.from(reservedNumbers)));
+
+                // Habilitar el botón de reserva
+                reserveButton.disabled = selectedNumbers.size === 0;
+            }
+
+            reserveButton.addEventListener("click", () => {
+                const selectedList = Array.from(selectedNumbers);
+                const message = `Hola, deseo apartar los siguientes números: ${selectedList.join(', ')}`;
+                
+                // Enviar el mensaje por WhatsApp
+                const whatsappUrl = `https://wa.me/5218211415128?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, "_blank");
+
+                // Limpiar la selección actual
+                selectedNumbers.clear();
+                reserveButton.disabled = true;
+            });
+        });
+    </script>
+</body>
+</html>
